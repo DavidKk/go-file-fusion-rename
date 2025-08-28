@@ -78,7 +78,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # 下载之前构建好的 artifact
       - name: Download Linux Binary
         uses: actions/download-artifact@v4
         with:
