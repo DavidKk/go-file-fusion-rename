@@ -1,0 +1,51 @@
+# 构建产物
+file-fusion-rename
+file-fusion-rename-*
+linkey-tray
+linkey
+*.exe
+
+# 跨平台构建目录
+dist/
+
+# 打包文件
+*.tar.gz
+*.zip
+
+# Air 临时文件
+tmp/
+build-errors.log
+
+# 测试文件夹
+test_folder/
+
+# IDE 配置
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+
+# Go 相关
+vendor/
+go.work
+go.work.sum
+
+# 临时文件
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+
+# 操作系统相关
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
