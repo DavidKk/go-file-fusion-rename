@@ -1,6 +1,6 @@
 module file-fusion-rename
 
-go 1.24.3
+go 1.24
 
 require (
 	github.com/getlantern/systray v1.2.2
