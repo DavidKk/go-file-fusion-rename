@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: "1.20"
       - name: Install GTK
         run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev
       - name: Build Linux Binary
@@ -21,7 +21,7 @@ jobs:
           export CGO_ENABLED=1
           go build -ldflags="-s -w" -o go-file-fusion-rename-linux main.go
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: go-file-fusion-rename-linux
           path: go-file-fusion-rename-linux
@@ -33,12 +33,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: "1.20"
       - name: Build Windows Binary
         run: |
           set CGO_ENABLED=1
           go build -ldflags="-s -w" -o go-file-fusion-rename.exe main.go
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: go-file-fusion-rename-windows
           path: go-file-fusion-rename.exe
@@ -50,12 +50,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: "1.20"
       - name: Build macOS Binary
         run: |
           export CGO_ENABLED=1
           go build -ldflags="-s -w" -o go-file-fusion-rename-macos main.go
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: go-file-fusion-rename-macos
           path: go-file-fusion-rename-macos
