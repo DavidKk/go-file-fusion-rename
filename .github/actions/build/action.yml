@@ -38,12 +38,38 @@ runs:
         export CGO_ENABLED=1
         go build -ldflags="-s -w" -o file-fusion-rename-linux main.go
 
+        # Create ZIP archive
+        echo "Creating ZIP archive for Linux binary..."
+        zip file-fusion-rename-linux.zip file-fusion-rename-linux
+
+        # Verify ZIP file
+        if [ -f "file-fusion-rename-linux.zip" ]; then
+          echo "Linux ZIP file created successfully"
+          echo "ZIP file size: $(ls -lh file-fusion-rename-linux.zip | awk '{print $5}')"
+        else
+          echo "Error: Linux ZIP file creation failed"
+          exit 1
+        fi
+
     - name: Build Windows Binary
       if: runner.os == 'Windows'
       shell: cmd
       run: |
         set CGO_ENABLED=1
         go build -ldflags="-s -w" -o file-fusion-rename-windows.exe main.go
+
+        REM Create ZIP archive
+        echo Creating ZIP archive for Windows binary...
+        powershell -Command "Compress-Archive -Path 'file-fusion-rename-windows.exe' -DestinationPath 'file-fusion-rename-windows.zip'"
+
+        REM Verify ZIP file
+        if exist "file-fusion-rename-windows.zip" (
+          echo Windows ZIP file created successfully
+          dir file-fusion-rename-windows.zip
+        ) else (
+          echo Error: Windows ZIP file creation failed
+          exit /b 1
+        )
 
     - name: Build macOS Binary (Intel)
       if: runner.os == 'macOS'
@@ -54,6 +80,19 @@ runs:
         go build -ldflags="-s -w" -o file-fusion-rename-macos-intel main.go
         codesign --force --deep --sign - file-fusion-rename-macos-intel
 
+        # Create ZIP archive
+        echo "Creating ZIP archive for macOS Intel binary..."
+        zip file-fusion-rename-macos-intel.zip file-fusion-rename-macos-intel
+
+        # Verify ZIP file
+        if [ -f "file-fusion-rename-macos-intel.zip" ]; then
+          echo "macOS Intel ZIP file created successfully"
+          echo "ZIP file size: $(ls -lh file-fusion-rename-macos-intel.zip | awk '{print $5}')"
+        else
+          echo "Error: macOS Intel ZIP file creation failed"
+          exit 1
+        fi
+
     - name: Build macOS Binary (ARM64)
       if: runner.os == 'macOS'
       shell: bash
@@ -62,6 +101,19 @@ runs:
         export GOARCH=arm64
         go build -ldflags="-s -w" -o file-fusion-rename-macos-arm64 main.go
         codesign --force --deep --sign - file-fusion-rename-macos-arm64
+
+        # Create ZIP archive
+        echo "Creating ZIP archive for macOS ARM64 binary..."
+        zip file-fusion-rename-macos-arm64.zip file-fusion-rename-macos-arm64
+
+        # Verify ZIP file
+        if [ -f "file-fusion-rename-macos-arm64.zip" ]; then
+          echo "macOS ARM64 ZIP file created successfully"
+          echo "ZIP file size: $(ls -lh file-fusion-rename-macos-arm64.zip | awk '{print $5}')"
+        else
+          echo "Error: macOS ARM64 ZIP file creation failed"
+          exit 1
+        fi
 
     - name: Package macOS App Bundle
       if: runner.os == 'macOS'
@@ -144,28 +196,28 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: file-fusion-rename-linux
-        path: file-fusion-rename-linux
+        path: file-fusion-rename-linux.zip
 
     - name: Upload Windows Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: file-fusion-rename-windows
-        path: file-fusion-rename-windows.exe
+        path: file-fusion-rename-windows.zip
 
     - name: Upload macOS Intel Artifact
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v4
       with:
         name: file-fusion-rename-macos-intel
-        path: file-fusion-rename-macos-intel
+        path: file-fusion-rename-macos-intel.zip
 
     - name: Upload macOS ARM64 Artifact
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v4
       with:
         name: file-fusion-rename-macos-arm64
-        path: file-fusion-rename-macos-arm64
+        path: file-fusion-rename-macos-arm64.zip
 
     - name: Upload macOS App Bundle
       if: runner.os == 'macOS'
@@ -174,24 +226,36 @@ runs:
         name: File-Fusion-Rename-macOS-App
         path: File-Fusion-Rename-macOS-App.zip
 
-    - name: Verify macOS App Bundle Upload
+    - name: Verify macOS ZIP Files Upload
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        echo "Verifying macOS app bundle and ZIP file before upload..."
-        if [ -d "File Fusion Rename.app" ]; then
-          echo "✅ App bundle directory exists"
-          echo "App bundle size: $(du -sh "File Fusion Rename.app" | cut -f1)"
+        echo "Verifying all macOS ZIP files before upload..."
+
+        # Check Intel ZIP
+        if [ -f "file-fusion-rename-macos-intel.zip" ]; then
+          echo "✅ macOS Intel ZIP file exists"
+          echo "Intel ZIP size: $(ls -lh file-fusion-rename-macos-intel.zip | awk '{print $5}')"
         else
-          echo "❌ App bundle directory not found!"
+          echo "❌ macOS Intel ZIP file not found!"
           exit 1
         fi
 
-        if [ -f "File-Fusion-Rename-macOS-App.zip" ]; then
-          echo "✅ ZIP file exists"
-          echo "ZIP file size: $(ls -lh File-Fusion-Rename-macOS-App.zip | awk '{print $5}')"
+        # Check ARM64 ZIP
+        if [ -f "file-fusion-rename-macos-arm64.zip" ]; then
+          echo "✅ macOS ARM64 ZIP file exists"
+          echo "ARM64 ZIP size: $(ls -lh file-fusion-rename-macos-arm64.zip | awk '{print $5}')"
         else
-          echo "❌ ZIP file not found!"
+          echo "❌ macOS ARM64 ZIP file not found!"
+          exit 1
+        fi
+
+        # Check App Bundle ZIP
+        if [ -f "File-Fusion-Rename-macOS-App.zip" ]; then
+          echo "✅ App bundle ZIP file exists"
+          echo "App bundle ZIP size: $(ls -lh File-Fusion-Rename-macOS-App.zip | awk '{print $5}')"
+        else
+          echo "❌ App bundle ZIP file not found!"
           exit 1
         fi
 
@@ -200,9 +264,9 @@ runs:
       shell: bash
       run: |
         if [ "$RUNNER_OS" = "Linux" ]; then
-          echo "list=file-fusion-rename-linux" >> $GITHUB_OUTPUT
+          echo "list=file-fusion-rename-linux.zip" >> $GITHUB_OUTPUT
         elif [ "$RUNNER_OS" = "Windows" ]; then
-          echo "list=file-fusion-rename-windows.exe" >> $GITHUB_OUTPUT
+          echo "list=file-fusion-rename-windows.zip" >> $GITHUB_OUTPUT
         elif [ "$RUNNER_OS" = "macOS" ]; then
-          echo "list=file-fusion-rename-macos-intel,file-fusion-rename-macos-arm64,File-Fusion-Rename-macOS-App" >> $GITHUB_OUTPUT
+          echo "list=file-fusion-rename-macos-intel.zip,file-fusion-rename-macos-arm64.zip,File-Fusion-Rename-macOS-App.zip" >> $GITHUB_OUTPUT
         fi

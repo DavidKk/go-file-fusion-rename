@@ -150,14 +150,47 @@ runs:
       shell: bash
       run: |
         echo "Listing downloaded artifacts:"
-        find ./release -type f -name "*" | head -20
-        echo "Checking macOS app bundle:"
-        ls -la "./release/File-Fusion-Rename-macOS-App/" || echo "macOS app bundle directory not found"
+        find ./release -type f -name "*.zip" | head -20
+        echo "Checking all ZIP files:"
+        
+        # Check Linux ZIP
+        if [ -f "./release/file-fusion-rename-linux/file-fusion-rename-linux.zip" ]; then
+          echo "✅ Linux ZIP file found"
+          ls -la "./release/file-fusion-rename-linux/file-fusion-rename-linux.zip"
+        else
+          echo "❌ Linux ZIP file not found"
+        fi
+        
+        # Check Windows ZIP
+        if [ -f "./release/file-fusion-rename-windows/file-fusion-rename-windows.zip" ]; then
+          echo "✅ Windows ZIP file found"
+          ls -la "./release/file-fusion-rename-windows/file-fusion-rename-windows.zip"
+        else
+          echo "❌ Windows ZIP file not found"
+        fi
+        
+        # Check macOS Intel ZIP
+        if [ -f "./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel.zip" ]; then
+          echo "✅ macOS Intel ZIP file found"
+          ls -la "./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel.zip"
+        else
+          echo "❌ macOS Intel ZIP file not found"
+        fi
+        
+        # Check macOS ARM64 ZIP
+        if [ -f "./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64.zip" ]; then
+          echo "✅ macOS ARM64 ZIP file found"
+          ls -la "./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64.zip"
+        else
+          echo "❌ macOS ARM64 ZIP file not found"
+        fi
+        
+        # Check macOS App Bundle ZIP
         if [ -f "./release/File-Fusion-Rename-macOS-App/File-Fusion-Rename-macOS-App.zip" ]; then
-          echo "macOS app ZIP file found"
+          echo "✅ macOS App Bundle ZIP file found"
           ls -la "./release/File-Fusion-Rename-macOS-App/File-Fusion-Rename-macOS-App.zip"
         else
-          echo "macOS app ZIP file not found"
+          echo "❌ macOS App Bundle ZIP file not found"
         fi
 
     - name: Create GitHub Release
@@ -178,17 +211,18 @@ runs:
           ${{ steps.outputs.outputs.changelog }}
 
           ### 📦 Downloads
-          - **Linux**: file-fusion-rename-linux
-          - **Windows**: file-fusion-rename-windows.exe  
-          - **macOS (Intel)**: file-fusion-rename-macos-intel
-          - **macOS (Apple Silicon)**: file-fusion-rename-macos-arm64
+          - **Linux**: file-fusion-rename-linux.zip
+          - **Windows**: file-fusion-rename-windows.zip
+          - **macOS (Intel)**: file-fusion-rename-macos-intel.zip
+          - **macOS (Apple Silicon)**: file-fusion-rename-macos-arm64.zip
           - **macOS App Bundle**: File-Fusion-Rename-macOS-App.zip (包含 .app 应用程序包)
 
           ### 🔧 Installation
-          **Binary Files:**
-          1. Download the appropriate binary for your platform
-          2. Make it executable (Linux/macOS): `chmod +x file-fusion-rename-*`
-          3. Run the application
+          **All Binary Files (ZIP Format):**
+          1. Download the appropriate ZIP file for your platform
+          2. Extract the ZIP file to get the binary
+          3. Make it executable (Linux/macOS): `chmod +x file-fusion-rename-*`
+          4. Run the application
 
           **macOS App Bundle:**
           1. Download `File-Fusion-Rename-macOS-App.zip`
@@ -199,10 +233,10 @@ runs:
           ### 📝 Changelog
           For detailed changes, see the commit history.
         files: |
-          ./release/file-fusion-rename-linux/file-fusion-rename-linux
-          ./release/file-fusion-rename-windows/file-fusion-rename-windows.exe
-          ./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel
-          ./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64
+          ./release/file-fusion-rename-linux/file-fusion-rename-linux.zip
+          ./release/file-fusion-rename-windows/file-fusion-rename-windows.zip
+          ./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel.zip
+          ./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64.zip
           ./release/File-Fusion-Rename-macOS-App/File-Fusion-Rename-macOS-App.zip
         draft: false
         prerelease: true
