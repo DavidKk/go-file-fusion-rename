@@ -153,11 +153,11 @@ runs:
         find ./release -type f -name "*" | head -20
         echo "Checking macOS app bundle:"
         ls -la "./release/File-Fusion-Rename-macOS-App/" || echo "macOS app bundle directory not found"
-        if [ -d "./release/File-Fusion-Rename-macOS-App/File Fusion Rename.app" ]; then
-          echo "macOS app bundle found"
-          ls -la "./release/File-Fusion-Rename-macOS-App/File Fusion Rename.app/"
+        if [ -f "./release/File-Fusion-Rename-macOS-App/File-Fusion-Rename-macOS-App.zip" ]; then
+          echo "macOS app ZIP file found"
+          ls -la "./release/File-Fusion-Rename-macOS-App/File-Fusion-Rename-macOS-App.zip"
         else
-          echo "macOS app bundle not found"
+          echo "macOS app ZIP file not found"
         fi
 
     - name: Create GitHub Release
@@ -182,7 +182,7 @@ runs:
           - **Windows**: file-fusion-rename-windows.exe  
           - **macOS (Intel)**: file-fusion-rename-macos-intel
           - **macOS (Apple Silicon)**: file-fusion-rename-macos-arm64
-          - **macOS App Bundle**: File Fusion Rename.app (双击运行)
+          - **macOS App Bundle**: File-Fusion-Rename-macOS-App.zip (包含 .app 应用程序包)
 
           ### 🔧 Installation
           **Binary Files:**
@@ -191,9 +191,10 @@ runs:
           3. Run the application
 
           **macOS App Bundle:**
-          1. Download `File Fusion Rename.app`
-          2. Drag to Applications folder
-          3. Double-click to run
+          1. Download `File-Fusion-Rename-macOS-App.zip`
+          2. Extract the ZIP file to get `File Fusion Rename.app`
+          3. Drag to Applications folder
+          4. Double-click to run
 
           ### 📝 Changelog
           For detailed changes, see the commit history.
@@ -202,7 +203,7 @@ runs:
           ./release/file-fusion-rename-windows/file-fusion-rename-windows.exe
           ./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel
           ./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64
-          ./release/File-Fusion-Rename-macOS-App/File Fusion Rename.app
+          ./release/File-Fusion-Rename-macOS-App/File-Fusion-Rename-macOS-App.zip
         draft: false
         prerelease: true
       env:

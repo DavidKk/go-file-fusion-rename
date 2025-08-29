@@ -122,8 +122,22 @@ runs:
         echo "Signing app bundle..."
         codesign --force --deep --sign - "File Fusion Rename.app" || echo "Code signing failed, continuing..."
 
+        # Create ZIP archive of the app bundle
+        echo "Creating ZIP archive..."
+        zip -r "File-Fusion-Rename-macOS-App.zip" "File Fusion Rename.app"
+
+        # Verify ZIP file
+        if [ -f "File-Fusion-Rename-macOS-App.zip" ]; then
+          echo "ZIP file created successfully"
+          echo "ZIP file size: $(ls -lh File-Fusion-Rename-macOS-App.zip | awk '{print $5}')"
+        else
+          echo "Error: ZIP file creation failed"
+          exit 1
+        fi
+
         echo "macOS app bundle created successfully!"
         echo "Final verification - app bundle exists: $([ -d 'File Fusion Rename.app' ] && echo 'YES' || echo 'NO')"
+        echo "Final verification - ZIP file exists: $([ -f 'File-Fusion-Rename-macOS-App.zip' ] && echo 'YES' || echo 'NO')"
 
     - name: Upload Linux Artifact
       if: runner.os == 'Linux'
@@ -158,20 +172,26 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: File-Fusion-Rename-macOS-App
-        path: File Fusion Rename.app
+        path: File-Fusion-Rename-macOS-App.zip
 
     - name: Verify macOS App Bundle Upload
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        echo "Verifying macOS app bundle before upload..."
+        echo "Verifying macOS app bundle and ZIP file before upload..."
         if [ -d "File Fusion Rename.app" ]; then
           echo "✅ App bundle directory exists"
           echo "App bundle size: $(du -sh "File Fusion Rename.app" | cut -f1)"
-          echo "App bundle contents:"
-          find "File Fusion Rename.app" -type f | head -10
         else
           echo "❌ App bundle directory not found!"
+          exit 1
+        fi
+
+        if [ -f "File-Fusion-Rename-macOS-App.zip" ]; then
+          echo "✅ ZIP file exists"
+          echo "ZIP file size: $(ls -lh File-Fusion-Rename-macOS-App.zip | awk '{print $5}')"
+        else
+          echo "❌ ZIP file not found!"
           exit 1
         fi
 
