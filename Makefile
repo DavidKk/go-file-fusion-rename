@@ -36,6 +36,8 @@ build-macos:
 	@echo "$(GREEN)Building macOS applications...$(NC)"
 	@CGO_ENABLED=1 GOARCH=amd64 $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-macos-intel $(MAIN_FILE)
 	@CGO_ENABLED=1 GOARCH=arm64 $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-macos-arm64 $(MAIN_FILE)
+	@codesign --force --deep --sign - $(BINARY_NAME)-macos-intel
+	@codesign --force --deep --sign - $(BINARY_NAME)-macos-arm64
 	@echo "$(GREEN)macOS Build completed: $(BINARY_NAME)-macos-intel, $(BINARY_NAME)-macos-arm64$(NC)"
 
 # Build for macOS Intel
@@ -43,6 +45,7 @@ build-macos:
 build-macos-intel:
 	@echo "$(GREEN)Building macOS Intel application...$(NC)"
 	@CGO_ENABLED=1 GOARCH=amd64 $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-macos-intel $(MAIN_FILE)
+	@codesign --force --deep --sign - $(BINARY_NAME)-macos-intel
 	@echo "$(GREEN)macOS Intel Build completed: $(BINARY_NAME)-macos-intel$(NC)"
 
 # Build for macOS ARM64
@@ -50,6 +53,7 @@ build-macos-intel:
 build-macos-arm64:
 	@echo "$(GREEN)Building macOS ARM64 application...$(NC)"
 	@CGO_ENABLED=1 GOARCH=arm64 $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-macos-arm64 $(MAIN_FILE)
+	@codesign --force --deep --sign - $(BINARY_NAME)-macos-arm64
 	@echo "$(GREEN)macOS ARM64 Build completed: $(BINARY_NAME)-macos-arm64$(NC)"
 
 # Build for current platform
@@ -57,6 +61,7 @@ build-macos-arm64:
 build-native:
 	@echo "$(GREEN)Building native application...$(NC)"
 	@CGO_ENABLED=1 $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-native $(MAIN_FILE)
+	@codesign --force --deep --sign - $(BINARY_NAME)-native 2>/dev/null || true
 	@echo "$(GREEN)Native Build completed: $(BINARY_NAME)-native$(NC)"
 
 # Build

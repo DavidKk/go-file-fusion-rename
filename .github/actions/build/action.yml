@@ -52,6 +52,7 @@ runs:
         export CGO_ENABLED=1
         export GOARCH=amd64
         go build -ldflags="-s -w" -o file-fusion-rename-macos-intel main.go
+        codesign --force --deep --sign - file-fusion-rename-macos-intel
 
     - name: Build macOS Binary (ARM64)
       if: runner.os == 'macOS'
@@ -60,6 +61,7 @@ runs:
         export CGO_ENABLED=1
         export GOARCH=arm64
         go build -ldflags="-s -w" -o file-fusion-rename-macos-arm64 main.go
+        codesign --force --deep --sign - file-fusion-rename-macos-arm64
 
     - name: Upload Linux Artifact
       if: runner.os == 'Linux'
