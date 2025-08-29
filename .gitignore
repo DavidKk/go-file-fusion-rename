@@ -3,6 +3,9 @@ file-fusion-rename
 file-fusion-rename-*
 *.exe
 
+# macOS 应用程序包 (开发时)
+*.app/
+
 # 跨平台构建目录
 dist/
 
