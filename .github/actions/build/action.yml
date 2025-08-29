@@ -63,6 +63,44 @@ runs:
         go build -ldflags="-s -w" -o file-fusion-rename-macos-arm64 main.go
         codesign --force --deep --sign - file-fusion-rename-macos-arm64
 
+    - name: Package macOS App Bundle
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        # Create app bundle structure
+        mkdir -p "File Fusion Rename.app/Contents/MacOS"
+        mkdir -p "File Fusion Rename.app/Contents/Resources"
+
+        # Copy ARM64 binary as the main executable (most Macs are ARM64 now)
+        cp file-fusion-rename-macos-arm64 "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+
+        # Create Info.plist
+        cat > "File Fusion Rename.app/Contents/Info.plist" << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+          <key>CFBundleExecutable</key>
+          <string>File Fusion Rename</string>
+          <key>CFBundleIdentifier</key>
+          <string>com.davidkk.file-fusion-rename</string>
+          <key>CFBundleName</key>
+          <string>File Fusion Rename</string>
+          <key>CFBundleVersion</key>
+          <string>1.0.0</string>
+          <key>CFBundleShortVersionString</key>
+          <string>1.0.0</string>
+          <key>CFBundlePackageType</key>
+          <string>APPL</string>
+          <key>LSUIElement</key>
+          <true/>
+        </dict>
+        </plist>
+        EOF
+
+        # Sign the app bundle
+        codesign --force --deep --sign - "File Fusion Rename.app"
+
     - name: Upload Linux Artifact
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
@@ -91,6 +129,13 @@ runs:
         name: file-fusion-rename-macos-arm64
         path: file-fusion-rename-macos-arm64
 
+    - name: Upload macOS App Bundle
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: File-Fusion-Rename-macOS-App
+        path: File Fusion Rename.app
+
     - name: Set artifacts output
       id: artifacts
       shell: bash
@@ -100,5 +145,5 @@ runs:
         elif [ "$RUNNER_OS" = "Windows" ]; then
           echo "list=file-fusion-rename-windows.exe" >> $GITHUB_OUTPUT
         elif [ "$RUNNER_OS" = "macOS" ]; then
-          echo "list=file-fusion-rename-macos-intel,file-fusion-rename-macos-arm64" >> $GITHUB_OUTPUT
+          echo "list=file-fusion-rename-macos-intel,file-fusion-rename-macos-arm64,File-Fusion-Rename-macOS-App" >> $GITHUB_OUTPUT
         fi
