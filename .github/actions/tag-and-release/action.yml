@@ -59,35 +59,51 @@ runs:
       id: version_check
       shell: bash
       run: |
+        set -e
+        
         # 获取所有标签
-        git fetch --tags
-
+        echo "Fetching all tags..."
+        git fetch --tags || true
+        
+        # 显示当前所有标签
+        echo "Current tags:"
+        git tag -l || echo "No tags found"
+        
         # 获取最新的正式版本标签（不包含alpha）
-        latest_formal_tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+        echo "Searching for formal version tags..."
+        latest_formal_tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || echo "")
+        echo "Latest formal tag found: '${latest_formal_tag}'"
 
         if [ -z "$latest_formal_tag" ]; then
           # 没有任何正式版本标签，使用初始版本
+          echo "No formal tags found, using initial version"
           echo "next_version=v1.0.0" >> $GITHUB_OUTPUT
           echo "strategy=initial" >> $GITHUB_OUTPUT
+          echo "latest_formal_tag=" >> $GITHUB_OUTPUT
         else
           # 检查是否已有对应的alpha版本
-          alpha_tag_exists=$(git tag -l | grep -E "^${latest_formal_tag}-alpha\\." | head -1)
+          echo "Checking for existing alpha versions of ${latest_formal_tag}..."
+          alpha_tag_exists=$(git tag -l | grep -E "^${latest_formal_tag}-alpha\\." | head -1 || echo "")
+          echo "Alpha tag found: '${alpha_tag_exists}'"
+          
           if [ -n "$alpha_tag_exists" ]; then
             # 已有alpha版本，说明当前版本还未正式发布，保持版本不变
+            echo "Alpha version exists, keeping current version"
             echo "next_version=$latest_formal_tag" >> $GITHUB_OUTPUT
             echo "strategy=keep_current" >> $GITHUB_OUTPUT
           else
             # 没有alpha版本，说明最新正式版本已发布，需要+1
+            echo "No alpha version found, incrementing version"
             version_without_v=${latest_formal_tag#v}
             IFS='.' read -r major minor patch <<< "$version_without_v"
             next_patch=$((patch + 1))
             next_version="v${major}.${minor}.${next_patch}"
+            echo "Incremented version: $next_version"
             echo "next_version=$next_version" >> $GITHUB_OUTPUT
             echo "strategy=increment" >> $GITHUB_OUTPUT
           fi
+          echo "latest_formal_tag=$latest_formal_tag" >> $GITHUB_OUTPUT
         fi
-
-        echo "latest_formal_tag=${latest_formal_tag:-v1.0.0}" >> $GITHUB_OUTPUT
 
     - name: Set outputs
       id: outputs
