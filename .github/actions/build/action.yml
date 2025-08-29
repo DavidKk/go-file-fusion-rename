@@ -69,15 +69,15 @@ runs:
       run: |
         set -e
         echo "Building macOS app bundle..."
-        
+
         # Verify ARM64 binary exists
         if [ ! -f "file-fusion-rename-macos-arm64" ]; then
           echo "Error: ARM64 binary not found"
           exit 1
         fi
-        
+
         echo "ARM64 binary size: $(ls -lh file-fusion-rename-macos-arm64 | awk '{print $5}')"
-        
+
         # Create app bundle structure
         echo "Creating app bundle structure..."
         mkdir -p "File Fusion Rename.app/Contents/MacOS"
@@ -117,12 +117,13 @@ runs:
         echo "Verifying app bundle structure..."
         ls -la "File Fusion Rename.app/Contents/"
         ls -la "File Fusion Rename.app/Contents/MacOS/"
-        
+
         # Sign the app bundle
         echo "Signing app bundle..."
         codesign --force --deep --sign - "File Fusion Rename.app" || echo "Code signing failed, continuing..."
-        
-        echo "macOS app bundle created successfully"
+
+        echo "macOS app bundle created successfully!"
+        echo "Final verification - app bundle exists: $([ -d 'File Fusion Rename.app' ] && echo 'YES' || echo 'NO')"
 
     - name: Upload Linux Artifact
       if: runner.os == 'Linux'
