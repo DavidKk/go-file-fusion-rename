@@ -145,6 +145,21 @@ runs:
       with:
         path: ./release
 
+    - name: Debug artifacts
+      if: steps.outputs.outputs.should_release == 'true'
+      shell: bash
+      run: |
+        echo "Listing downloaded artifacts:"
+        find ./release -type f -name "*" | head -20
+        echo "Checking macOS app bundle:"
+        ls -la "./release/File-Fusion-Rename-macOS-App/" || echo "macOS app bundle directory not found"
+        if [ -d "./release/File-Fusion-Rename-macOS-App/File Fusion Rename.app" ]; then
+          echo "macOS app bundle found"
+          ls -la "./release/File-Fusion-Rename-macOS-App/File Fusion Rename.app/"
+        else
+          echo "macOS app bundle not found"
+        fi
+
     - name: Create GitHub Release
       if: steps.outputs.outputs.should_release == 'true' && steps.outputs.outputs.tag != ''
       uses: softprops/action-gh-release@v2
