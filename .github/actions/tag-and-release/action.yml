@@ -31,16 +31,30 @@ outputs:
   should-release:
     description: "Whether release should proceed"
     value: ${{ steps.outputs.outputs.should_release }}
+  timestamp:
+    description: "Build timestamp"
+    value: ${{ steps.outputs.outputs.timestamp }}
 
 runs:
   using: "composite"
   steps:
-    - name: Get commit hash
+    - name: Get commit hash and timestamp
       id: hash
       shell: bash
       run: |
+        # Get commit hash
         echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
         echo "full_sha=$GITHUB_SHA" >> $GITHUB_OUTPUT
+        
+        # Get timestamp in UTC format (YYYYMMDD-HHMMSS)
+        timestamp=$(date -u +"%Y%m%d-%H%M%S")
+        echo "timestamp=$timestamp" >> $GITHUB_OUTPUT
+        
+        # Create unique version suffix with timestamp and hash
+        version_suffix="${timestamp}.${GITHUB_SHA:0:7}"
+        echo "version_suffix=$version_suffix" >> $GITHUB_OUTPUT
+        
+        echo "Generated version suffix: $version_suffix"
 
     - name: Check existing tag
       id: existing_tag
@@ -114,9 +128,9 @@ runs:
           version_tag="${{ steps.existing_tag.outputs.tag }}"
           changelog="Release using existing tag ${{ steps.existing_tag.outputs.tag }}"
         else
-          # 使用智能版本策略
+          # 使用智能版本策略，包含时间戳
           base_version="${{ steps.version_check.outputs.next_version }}"
-          version_tag="${base_version}-alpha.${{ steps.hash.outputs.short_sha }}"
+          version_tag="${base_version}-alpha.${{ steps.hash.outputs.version_suffix }}"
           
           case "${{ steps.version_check.outputs.strategy }}" in
             "initial")
@@ -138,6 +152,7 @@ runs:
         echo "changelog=${changelog}" >> $GITHUB_OUTPUT
         echo "should_release=true" >> $GITHUB_OUTPUT
         echo "hash=${{ steps.hash.outputs.short_sha }}" >> $GITHUB_OUTPUT
+        echo "timestamp=${{ steps.hash.outputs.timestamp }}" >> $GITHUB_OUTPUT
 
     - name: Download artifacts
       if: steps.outputs.outputs.should_release == 'true'
@@ -205,7 +220,8 @@ runs:
           ### 📋 Release Info
           - **Release Type**: 自动发布 (Auto)
           - **Commit Hash**: ${{ steps.outputs.outputs.hash }}
-          - **Version Strategy**: 哈希值版本
+          - **Build Timestamp**: ${{ steps.outputs.outputs.timestamp }}
+          - **Version Strategy**: 时间戳+哈希值版本
 
           ### ✨ What's New
           ${{ steps.outputs.outputs.changelog }}
