@@ -77,7 +77,8 @@ runs:
       run: |
         export CGO_ENABLED=1
         export GOARCH=amd64
-        go build -ldflags="-s -w" -o file-fusion-rename-macos-intel main.go
+        export MACOSX_DEPLOYMENT_TARGET=11.0
+        go build -ldflags="-s -w -X main.version=1.0.0" -tags="osusergo netgo" -o file-fusion-rename-macos-intel main.go
         codesign --force --deep --sign - file-fusion-rename-macos-intel
 
         # Create ZIP archive
@@ -99,7 +100,8 @@ runs:
       run: |
         export CGO_ENABLED=1
         export GOARCH=arm64
-        go build -ldflags="-s -w" -o file-fusion-rename-macos-arm64 main.go
+        export MACOSX_DEPLOYMENT_TARGET=11.0
+        go build -ldflags="-s -w -X main.version=1.0.0" -tags="osusergo netgo" -o file-fusion-rename-macos-arm64 main.go
         codesign --force --deep --sign - file-fusion-rename-macos-arm64
 
         # Create ZIP archive
@@ -122,27 +124,38 @@ runs:
         set -e
         echo "Building macOS app bundle..."
 
-        # Verify ARM64 binary exists
-        if [ ! -f "file-fusion-rename-macos-arm64" ]; then
-          echo "Error: ARM64 binary not found"
+        # Verify both binaries exist
+        if [ ! -f "file-fusion-rename-macos-intel" ] || [ ! -f "file-fusion-rename-macos-arm64" ]; then
+          echo "Error: Both Intel and ARM64 binaries are required"
           exit 1
         fi
 
+        echo "Intel binary size: $(ls -lh file-fusion-rename-macos-intel | awk '{print $5}')"
         echo "ARM64 binary size: $(ls -lh file-fusion-rename-macos-arm64 | awk '{print $5}')"
+
+        # Create universal binary using lipo
+        echo "Creating universal binary..."
+        lipo -create -output "file-fusion-rename-universal" \
+          "file-fusion-rename-macos-intel" \
+          "file-fusion-rename-macos-arm64"
+
+        # Verify universal binary
+        echo "Universal binary architectures:"
+        lipo -info "file-fusion-rename-universal"
 
         # Create app bundle structure
         echo "Creating app bundle structure..."
         mkdir -p "File Fusion Rename.app/Contents/MacOS"
         mkdir -p "File Fusion Rename.app/Contents/Resources"
 
-        # Copy ARM64 binary as the main executable (most Macs are ARM64 now)
-        echo "Copying ARM64 binary to app bundle..."
-        cp file-fusion-rename-macos-arm64 "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+        # Copy universal binary to app bundle
+        echo "Copying universal binary to app bundle..."
+        cp file-fusion-rename-universal "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
         chmod +x "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
 
-        # Create Info.plist
+        # Create improved Info.plist with better macOS compatibility
         echo "Creating Info.plist..."
-        cat > "File Fusion Rename.app/Contents/Info.plist" << 'EOF'
+        cat > "File Fusion Rename.app/Contents/Info.plist" <<'EOF'
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
         <plist version="1.0">
@@ -153,14 +166,41 @@ runs:
           <string>com.davidkk.file-fusion-rename</string>
           <key>CFBundleName</key>
           <string>File Fusion Rename</string>
+          <key>CFBundleDisplayName</key>
+          <string>File Fusion Rename</string>
           <key>CFBundleVersion</key>
           <string>1.0.0</string>
           <key>CFBundleShortVersionString</key>
           <string>1.0.0</string>
           <key>CFBundlePackageType</key>
           <string>APPL</string>
-          <key>LSUIElement</key>
+          <key>CFBundleInfoDictionaryVersion</key>
+          <string>6.0</string>
+          <key>LSMinimumSystemVersion</key>
+          <string>11.0</string>
+          <key>LSApplicationCategoryType</key>
+          <string>public.app-category.utilities</string>
+          <key>NSPrincipalClass</key>
+          <string>NSApplication</string>
+          <key>NSHighResolutionCapable</key>
           <true/>
+          <key>LSUIElement</key>
+          <false/>
+          <key>NSSupportsAutomaticGraphicsSwitching</key>
+          <true/>
+          <key>CFBundleSupportedPlatforms</key>
+          <array>
+            <string>MacOSX</string>
+          </array>
+          <key>DTSDKName</key>
+          <string>macosx</string>
+          <key>NSAppTransportSecurity</key>
+          <dict>
+            <key>NSAllowsArbitraryLoads</key>
+            <false/>
+          </dict>
+          <key>NSRequiresAquaSystemAppearance</key>
+          <false/>
         </dict>
         </plist>
         EOF
@@ -170,9 +210,29 @@ runs:
         ls -la "File Fusion Rename.app/Contents/"
         ls -la "File Fusion Rename.app/Contents/MacOS/"
 
+        # Verify universal binary in app bundle
+        echo "Verifying universal binary in app bundle:"
+        lipo -info "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+        file "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+
+        # Set proper permissions
+        echo "Setting proper permissions..."
+        chmod 755 "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+        find "File Fusion Rename.app" -type d -exec chmod 755 {} \;
+        find "File Fusion Rename.app" -type f -exec chmod 644 {} \;
+        chmod 755 "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+
+        # Sign the executable first
+        echo "Signing executable..."
+        codesign --force --options runtime --sign - "File Fusion Rename.app/Contents/MacOS/File Fusion Rename" || echo "Executable signing failed, continuing..."
+
         # Sign the app bundle
         echo "Signing app bundle..."
-        codesign --force --deep --sign - "File Fusion Rename.app" || echo "Code signing failed, continuing..."
+        codesign --force --deep --options runtime --sign - "File Fusion Rename.app" || echo "App bundle signing failed, continuing..."
+
+        # Verify code signature
+        echo "Verifying code signature..."
+        codesign --verify --deep --strict "File Fusion Rename.app" && echo "Code signature verified" || echo "Code signature verification failed"
 
         # Create ZIP archive of the app bundle
         echo "Creating ZIP archive..."

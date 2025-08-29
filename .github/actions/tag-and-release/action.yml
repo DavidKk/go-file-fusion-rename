@@ -45,15 +45,15 @@ runs:
         # Get commit hash
         echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
         echo "full_sha=$GITHUB_SHA" >> $GITHUB_OUTPUT
-        
+
         # Get timestamp in UTC format (YYYYMMDD-HHMMSS)
         timestamp=$(date -u +"%Y%m%d-%H%M%S")
         echo "timestamp=$timestamp" >> $GITHUB_OUTPUT
-        
+
         # Create unique version suffix with timestamp and hash
         version_suffix="${timestamp}.${GITHUB_SHA:0:7}"
         echo "version_suffix=$version_suffix" >> $GITHUB_OUTPUT
-        
+
         echo "Generated version suffix: $version_suffix"
 
     - name: Check existing tag
@@ -167,7 +167,7 @@ runs:
         echo "Listing downloaded artifacts:"
         find ./release -type f -name "*.zip" | head -20
         echo "Checking all ZIP files:"
-        
+
         # Check Linux ZIP
         if [ -f "./release/file-fusion-rename-linux/file-fusion-rename-linux.zip" ]; then
           echo "✅ Linux ZIP file found"
@@ -175,7 +175,7 @@ runs:
         else
           echo "❌ Linux ZIP file not found"
         fi
-        
+
         # Check Windows ZIP
         if [ -f "./release/file-fusion-rename-windows/file-fusion-rename-windows.zip" ]; then
           echo "✅ Windows ZIP file found"
@@ -183,7 +183,7 @@ runs:
         else
           echo "❌ Windows ZIP file not found"
         fi
-        
+
         # Check macOS Intel ZIP
         if [ -f "./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel.zip" ]; then
           echo "✅ macOS Intel ZIP file found"
@@ -191,7 +191,7 @@ runs:
         else
           echo "❌ macOS Intel ZIP file not found"
         fi
-        
+
         # Check macOS ARM64 ZIP
         if [ -f "./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64.zip" ]; then
           echo "✅ macOS ARM64 ZIP file found"
@@ -199,7 +199,7 @@ runs:
         else
           echo "❌ macOS ARM64 ZIP file not found"
         fi
-        
+
         # Check macOS App Bundle ZIP
         if [ -f "./release/File-Fusion-Rename-macOS-App/File-Fusion-Rename-macOS-App.zip" ]; then
           echo "✅ macOS App Bundle ZIP file found"
