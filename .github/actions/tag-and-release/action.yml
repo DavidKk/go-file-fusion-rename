@@ -119,7 +119,8 @@ runs:
           ### 📦 Downloads
           - **Linux**: file-fusion-rename-linux
           - **Windows**: file-fusion-rename-windows.exe  
-          - **macOS**: file-fusion-rename-macos
+          - **macOS (Intel)**: file-fusion-rename-macos-intel
+          - **macOS (Apple Silicon)**: file-fusion-rename-macos-arm64
 
           ### 🔧 Installation
           1. Download the appropriate binary for your platform
@@ -131,7 +132,8 @@ runs:
         files: |
           ./release/file-fusion-rename-linux/file-fusion-rename-linux
           ./release/file-fusion-rename-windows/file-fusion-rename-windows.exe
-          ./release/file-fusion-rename-macos/file-fusion-rename-macos
+          ./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel
+          ./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64
         draft: false
         prerelease: true
       env:

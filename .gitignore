@@ -1,8 +1,6 @@
 # 构建产物
 file-fusion-rename
 file-fusion-rename-*
-linkey-tray
-linkey
 *.exe
 
 # 跨平台构建目录

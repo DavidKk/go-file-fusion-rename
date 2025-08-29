@@ -64,4 +64,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version-bump: "patch"
-          artifacts: "file-fusion-rename-linux,file-fusion-rename-windows.exe,file-fusion-rename-macos"
+          artifacts: "file-fusion-rename-linux,file-fusion-rename-windows.exe,file-fusion-rename-macos-intel,file-fusion-rename-macos-arm64"

@@ -45,12 +45,21 @@ runs:
         set CGO_ENABLED=1
         go build -ldflags="-s -w" -o file-fusion-rename-windows.exe main.go
 
-    - name: Build macOS Binary
+    - name: Build macOS Binary (Intel)
       if: runner.os == 'macOS'
       shell: bash
       run: |
         export CGO_ENABLED=1
-        go build -ldflags="-s -w" -o file-fusion-rename-macos main.go
+        export GOARCH=amd64
+        go build -ldflags="-s -w" -o file-fusion-rename-macos-intel main.go
+
+    - name: Build macOS Binary (ARM64)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        export CGO_ENABLED=1
+        export GOARCH=arm64
+        go build -ldflags="-s -w" -o file-fusion-rename-macos-arm64 main.go
 
     - name: Upload Linux Artifact
       if: runner.os == 'Linux'
@@ -66,12 +75,19 @@ runs:
         name: file-fusion-rename-windows
         path: file-fusion-rename-windows.exe
 
-    - name: Upload macOS Artifact
+    - name: Upload macOS Intel Artifact
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v4
       with:
-        name: file-fusion-rename-macos
-        path: file-fusion-rename-macos
+        name: file-fusion-rename-macos-intel
+        path: file-fusion-rename-macos-intel
+
+    - name: Upload macOS ARM64 Artifact
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: file-fusion-rename-macos-arm64
+        path: file-fusion-rename-macos-arm64
 
     - name: Set artifacts output
       id: artifacts
@@ -82,5 +98,5 @@ runs:
         elif [ "$RUNNER_OS" = "Windows" ]; then
           echo "list=file-fusion-rename-windows.exe" >> $GITHUB_OUTPUT
         elif [ "$RUNNER_OS" = "macOS" ]; then
-          echo "list=file-fusion-rename-macos" >> $GITHUB_OUTPUT
+          echo "list=file-fusion-rename-macos-intel,file-fusion-rename-macos-arm64" >> $GITHUB_OUTPUT
         fi
