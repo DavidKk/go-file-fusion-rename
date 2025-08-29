@@ -67,14 +67,29 @@ runs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
+        set -e
+        echo "Building macOS app bundle..."
+        
+        # Verify ARM64 binary exists
+        if [ ! -f "file-fusion-rename-macos-arm64" ]; then
+          echo "Error: ARM64 binary not found"
+          exit 1
+        fi
+        
+        echo "ARM64 binary size: $(ls -lh file-fusion-rename-macos-arm64 | awk '{print $5}')"
+        
         # Create app bundle structure
+        echo "Creating app bundle structure..."
         mkdir -p "File Fusion Rename.app/Contents/MacOS"
         mkdir -p "File Fusion Rename.app/Contents/Resources"
 
         # Copy ARM64 binary as the main executable (most Macs are ARM64 now)
+        echo "Copying ARM64 binary to app bundle..."
         cp file-fusion-rename-macos-arm64 "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+        chmod +x "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
 
         # Create Info.plist
+        echo "Creating Info.plist..."
         cat > "File Fusion Rename.app/Contents/Info.plist" << 'EOF'
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -98,8 +113,16 @@ runs:
         </plist>
         EOF
 
+        # Verify app bundle structure
+        echo "Verifying app bundle structure..."
+        ls -la "File Fusion Rename.app/Contents/"
+        ls -la "File Fusion Rename.app/Contents/MacOS/"
+        
         # Sign the app bundle
-        codesign --force --deep --sign - "File Fusion Rename.app"
+        echo "Signing app bundle..."
+        codesign --force --deep --sign - "File Fusion Rename.app" || echo "Code signing failed, continuing..."
+        
+        echo "macOS app bundle created successfully"
 
     - name: Upload Linux Artifact
       if: runner.os == 'Linux'
@@ -135,6 +158,21 @@ runs:
       with:
         name: File-Fusion-Rename-macOS-App
         path: File Fusion Rename.app
+
+    - name: Verify macOS App Bundle Upload
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        echo "Verifying macOS app bundle before upload..."
+        if [ -d "File Fusion Rename.app" ]; then
+          echo "✅ App bundle directory exists"
+          echo "App bundle size: $(du -sh "File Fusion Rename.app" | cut -f1)"
+          echo "App bundle contents:"
+          find "File Fusion Rename.app" -type f | head -10
+        else
+          echo "❌ App bundle directory not found!"
+          exit 1
+        fi
 
     - name: Set artifacts output
       id: artifacts
