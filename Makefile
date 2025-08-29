@@ -30,6 +30,20 @@ dev:
 	@echo "$(GREEN)Starting hot reload development mode...$(NC)"
 	@air
 
+# Build for macOS
+.PHONY: build-macos
+build-macos:
+	@echo "$(GREEN)Building macOS application...$(NC)"
+	@CGO_ENABLED=1 $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-macos $(MAIN_FILE)
+	@echo "$(GREEN)macOS Build completed: $(BINARY_NAME)-macos$(NC)"
+
+# Build for current platform
+.PHONY: build-native
+build-native:
+	@echo "$(GREEN)Building native application...$(NC)"
+	@CGO_ENABLED=1 $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-native $(MAIN_FILE)
+	@echo "$(GREEN)Native Build completed: $(BINARY_NAME)-native$(NC)"
+
 # Build
 .PHONY: build
 build:
@@ -66,7 +80,7 @@ vet:
 clean:
 	@echo "$(YELLOW)Cleaning files...$(NC)"
 	@rm -rf $(TMP_DIR)/
-	@rm -f $(BINARY_NAME)
+	@rm -f $(BINARY_NAME) $(BINARY_NAME)-macos $(BINARY_NAME)-native
 	@echo "$(GREEN)Clean completed$(NC)"
 
 # Install dependencies
@@ -84,11 +98,13 @@ help:
 	@echo "$(BLUE)================================$(NC)"
 	@echo
 	@echo "$(YELLOW)Common Commands:$(NC)"
-	@echo "  $(GREEN)make dev$(NC)     - Start hot reload development mode"
-	@echo "  $(GREEN)make build$(NC)   - Build application"
-	@echo "  $(GREEN)make run$(NC)     - Run application"
-	@echo "  $(GREEN)make test$(NC)    - Run tests"
-	@echo "  $(GREEN)make clean$(NC)   - Clean files"
+	@echo "  $(GREEN)make dev$(NC)        - Start hot reload development mode"
+	@echo "  $(GREEN)make build$(NC)      - Build application"
+	@echo "  $(GREEN)make build-macos$(NC) - Build for macOS"
+	@echo "  $(GREEN)make build-native$(NC)- Build for current platform"
+	@echo "  $(GREEN)make run$(NC)        - Run application"
+	@echo "  $(GREEN)make test$(NC)       - Run tests"
+	@echo "  $(GREEN)make clean$(NC)      - Clean files"
 	@echo
 	@echo "$(YELLOW)Code Quality:$(NC)"
 	@echo "  $(GREEN)make fmt$(NC)     - Format code"
