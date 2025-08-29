@@ -129,6 +129,8 @@ runs:
           ### 📝 Changelog
           For detailed changes, see the commit history.
         files: |
+          ./release/file-fusion-rename-linux/file-fusion-rename-linux
+          ./release/file-fusion-rename-windows/file-fusion-rename-windows.exe
           ./release/file-fusion-rename-macos/file-fusion-rename-macos
         draft: false
         prerelease: true
