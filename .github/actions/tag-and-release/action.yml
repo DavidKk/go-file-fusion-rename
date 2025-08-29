@@ -55,19 +55,39 @@ runs:
           echo "has_tag=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Bump version and push tag
-      id: auto_tag
-      if: github.ref_name == 'main' && steps.existing_tag.outputs.has_tag == 'false'
-      uses: anothrNick/github-tag-action@1.67.0
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-        WITH_V: true
-        DEFAULT_BUMP: ${{ inputs.version-bump }}
-        RELEASE_BRANCHES: main
-        DRY_RUN: false
-        VERBOSE: true
-        INITIAL_VERSION: "1.0.0"
-        TAG_CONTEXT: branch
+    - name: Check version strategy
+      id: version_check
+      shell: bash
+      run: |
+        # 获取所有标签
+        git fetch --tags
+
+        # 获取最新的正式版本标签（不包含alpha）
+        latest_formal_tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+
+        if [ -z "$latest_formal_tag" ]; then
+          # 没有任何正式版本标签，使用初始版本
+          echo "next_version=v1.0.0" >> $GITHUB_OUTPUT
+          echo "strategy=initial" >> $GITHUB_OUTPUT
+        else
+          # 检查是否已有对应的alpha版本
+          alpha_tag_exists=$(git tag -l | grep -E "^${latest_formal_tag}-alpha\\." | head -1)
+          if [ -n "$alpha_tag_exists" ]; then
+            # 已有alpha版本，说明当前版本还未正式发布，保持版本不变
+            echo "next_version=$latest_formal_tag" >> $GITHUB_OUTPUT
+            echo "strategy=keep_current" >> $GITHUB_OUTPUT
+          else
+            # 没有alpha版本，说明最新正式版本已发布，需要+1
+            version_without_v=${latest_formal_tag#v}
+            IFS='.' read -r major minor patch <<< "$version_without_v"
+            next_patch=$((patch + 1))
+            next_version="v${major}.${minor}.${next_patch}"
+            echo "next_version=$next_version" >> $GITHUB_OUTPUT
+            echo "strategy=increment" >> $GITHUB_OUTPUT
+          fi
+        fi
+
+        echo "latest_formal_tag=${latest_formal_tag:-v1.0.0}" >> $GITHUB_OUTPUT
 
     - name: Set outputs
       id: outputs
@@ -78,14 +98,24 @@ runs:
           version_tag="${{ steps.existing_tag.outputs.tag }}"
           changelog="Release using existing tag ${{ steps.existing_tag.outputs.tag }}"
         else
-          # 自动触发：使用哈希值
-          if [ "${{ steps.auto_tag.outputs.tag }}" != "" ]; then
-            base_version="${{ steps.auto_tag.outputs.tag }}"
-          else
-            base_version="v1.0.0"
-          fi
+          # 使用智能版本策略
+          base_version="${{ steps.version_check.outputs.next_version }}"
           version_tag="${base_version}-alpha.${{ steps.hash.outputs.short_sha }}"
-          changelog="${{ steps.auto_tag.outputs.changelog }}"
+          
+          case "${{ steps.version_check.outputs.strategy }}" in
+            "initial")
+              changelog="Initial version ${base_version} (first release)"
+              ;;
+            "increment")
+              changelog="Auto-increment to ${base_version} (previous version ${{ steps.version_check.outputs.latest_formal_tag }} was already released)"
+              ;;
+            "keep_current")
+              changelog="Keep current version ${base_version} (no formal release yet for this version)"
+              ;;
+            *)
+              changelog="Alpha release ${version_tag}"
+              ;;
+          esac
         fi
 
         echo "tag=${version_tag}" >> $GITHUB_OUTPUT
