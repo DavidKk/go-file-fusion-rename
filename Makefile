@@ -95,11 +95,42 @@ vet:
 	@echo "$(GREEN)Running code check...$(NC)"
 	@$(GO) vet ./...
 
+# Package macOS app
+.PHONY: package-macos
+package-macos: build-native
+	@echo "$(GREEN)Packaging macOS application...$(NC)"
+	@mkdir -p "File Fusion Rename.app/Contents/MacOS"
+	@mkdir -p "File Fusion Rename.app/Contents/Resources"
+	@cp $(BINARY_NAME)-native "File Fusion Rename.app/Contents/MacOS/File Fusion Rename"
+	@echo '<?xml version="1.0" encoding="UTF-8"?>' > "File Fusion Rename.app/Contents/Info.plist"
+	@echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '<plist version="1.0">' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '<dict>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <key>CFBundleExecutable</key>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <string>File Fusion Rename</string>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <key>CFBundleIdentifier</key>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <string>com.davidkk.file-fusion-rename</string>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <key>CFBundleName</key>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <string>File Fusion Rename</string>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <key>CFBundleVersion</key>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <string>1.0.0</string>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <key>CFBundleShortVersionString</key>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <string>1.0.0</string>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <key>CFBundlePackageType</key>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <string>APPL</string>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <key>LSUIElement</key>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '  <true/>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '</dict>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@echo '</plist>' >> "File Fusion Rename.app/Contents/Info.plist"
+	@codesign --force --deep --sign - "File Fusion Rename.app" 2>/dev/null || true
+	@echo "$(GREEN)macOS App packaged: File Fusion Rename.app$(NC)"
+
 # Clean
 .PHONY: clean
 clean:
 	@echo "$(YELLOW)Cleaning files...$(NC)"
 	@rm -rf $(TMP_DIR)/
+	@rm -rf "File Fusion Rename.app"
 	@rm -f $(BINARY_NAME) $(BINARY_NAME)-macos-intel $(BINARY_NAME)-macos-arm64 $(BINARY_NAME)-native
 	@echo "$(GREEN)Clean completed$(NC)"
 
@@ -124,6 +155,7 @@ help:
 	@echo "  $(GREEN)make build-macos-intel$(NC)- Build for macOS Intel"
 	@echo "  $(GREEN)make build-macos-arm64$(NC)- Build for macOS ARM64"
 	@echo "  $(GREEN)make build-native$(NC)    - Build for current platform"
+	@echo "  $(GREEN)make package-macos$(NC)   - Package as macOS .app bundle"
 	@echo "  $(GREEN)make run$(NC)             - Run application"
 	@echo "  $(GREEN)make test$(NC)            - Run tests"
 	@echo "  $(GREEN)make clean$(NC)           - Clean files"

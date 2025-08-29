@@ -60,15 +60,15 @@ runs:
       shell: bash
       run: |
         set -e
-        
+
         # 获取所有标签
         echo "Fetching all tags..."
         git fetch --tags || true
-        
+
         # 显示当前所有标签
         echo "Current tags:"
         git tag -l || echo "No tags found"
-        
+
         # 获取最新的正式版本标签（不包含alpha）
         echo "Searching for formal version tags..."
         latest_formal_tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || echo "")
@@ -167,11 +167,18 @@ runs:
           - **Windows**: file-fusion-rename-windows.exe  
           - **macOS (Intel)**: file-fusion-rename-macos-intel
           - **macOS (Apple Silicon)**: file-fusion-rename-macos-arm64
+          - **macOS App Bundle**: File Fusion Rename.app (双击运行)
 
           ### 🔧 Installation
+          **Binary Files:**
           1. Download the appropriate binary for your platform
           2. Make it executable (Linux/macOS): `chmod +x file-fusion-rename-*`
           3. Run the application
+
+          **macOS App Bundle:**
+          1. Download `File-Fusion-Rename-macOS-App.zip`
+          2. Extract and drag to Applications folder
+          3. Double-click to run
 
           ### 📝 Changelog
           For detailed changes, see the commit history.
@@ -180,6 +187,7 @@ runs:
           ./release/file-fusion-rename-windows/file-fusion-rename-windows.exe
           ./release/file-fusion-rename-macos-intel/file-fusion-rename-macos-intel
           ./release/file-fusion-rename-macos-arm64/file-fusion-rename-macos-arm64
+          ./release/File-Fusion-Rename-macOS-App/
         draft: false
         prerelease: true
       env:
