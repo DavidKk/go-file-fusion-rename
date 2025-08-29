@@ -12,6 +12,14 @@ inputs:
   artifacts:
     description: "Comma-separated list of artifacts to include in release"
     required: true
+  release-type:
+    description: "Release type: auto only"
+    required: false
+    default: "auto"
+  use-hash:
+    description: "Whether to use hash for version"
+    required: false
+    default: "true"
 
 outputs:
   tag:
@@ -27,9 +35,29 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Get commit hash
+      id: hash
+      shell: bash
+      run: |
+        echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+        echo "full_sha=$GITHUB_SHA" >> $GITHUB_OUTPUT
+
+    - name: Check existing tag
+      id: existing_tag
+      shell: bash
+      run: |
+        existing_tag=$(git tag --points-at HEAD)
+        if [ -n "$existing_tag" ]; then
+          echo "tag=$existing_tag" >> $GITHUB_OUTPUT
+          echo "has_tag=true" >> $GITHUB_OUTPUT
+        else
+          echo "tag=" >> $GITHUB_OUTPUT
+          echo "has_tag=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Bump version and push tag
-      id: tag
-      if: github.ref_name == 'main'
+      id: auto_tag
+      if: github.ref_name == 'main' && steps.existing_tag.outputs.has_tag == 'false'
       uses: anothrNick/github-tag-action@1.67.0
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
@@ -45,15 +73,25 @@ runs:
       id: outputs
       shell: bash
       run: |
-        if [ "${{ github.ref_name }}" = "main" ]; then
-          echo "tag=${{ steps.tag.outputs.tag }}" >> $GITHUB_OUTPUT
-          echo "changelog=${{ steps.tag.outputs.changelog }}" >> $GITHUB_OUTPUT
-          echo "should_release=true" >> $GITHUB_OUTPUT
+        if [ "${{ steps.existing_tag.outputs.has_tag }}" = "true" ]; then
+          # 如果已有TAG，直接使用
+          version_tag="${{ steps.existing_tag.outputs.tag }}"
+          changelog="Release using existing tag ${{ steps.existing_tag.outputs.tag }}"
         else
-          echo "tag=" >> $GITHUB_OUTPUT
-          echo "changelog=" >> $GITHUB_OUTPUT
-          echo "should_release=false" >> $GITHUB_OUTPUT
+          # 自动触发：使用哈希值
+          if [ "${{ steps.auto_tag.outputs.tag }}" != "" ]; then
+            base_version="${{ steps.auto_tag.outputs.tag }}"
+          else
+            base_version="v1.0.0"
+          fi
+          version_tag="${base_version}-alpha.${{ steps.hash.outputs.short_sha }}"
+          changelog="${{ steps.auto_tag.outputs.changelog }}"
         fi
+
+        echo "tag=${version_tag}" >> $GITHUB_OUTPUT
+        echo "changelog=${changelog}" >> $GITHUB_OUTPUT
+        echo "should_release=true" >> $GITHUB_OUTPUT
+        echo "hash=${{ steps.hash.outputs.short_sha }}" >> $GITHUB_OUTPUT
 
     - name: Download artifacts
       if: steps.outputs.outputs.should_release == 'true'
@@ -69,6 +107,11 @@ runs:
         name: Release ${{ steps.outputs.outputs.tag }}
         body: |
           ## 🚀 Release ${{ steps.outputs.outputs.tag }}
+
+          ### 📋 Release Info
+          - **Release Type**: 自动发布 (Auto)
+          - **Commit Hash**: ${{ steps.outputs.outputs.hash }}
+          - **Version Strategy**: 哈希值版本
 
           ### ✨ What's New
           ${{ steps.outputs.outputs.changelog }}
@@ -88,6 +131,6 @@ runs:
         files: |
           ./release/file-fusion-rename-macos/file-fusion-rename-macos
         draft: false
-        prerelease: false
+        prerelease: true
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
